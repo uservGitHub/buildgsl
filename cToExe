@@ -1,0 +1,39 @@
+#!/usr/bin/node
+
+/**
+ * 错误代码开头
+ * 1 文件非法
+ * 2 编译错误
+ * 3 链接错误
+ * 4 重命名错
+ */
+
+ if(process.argv.length < 3) process.exit(11) 
+ let param = process.argv[2]
+ let len = param.length
+ if(param.charAt(len-2) !== '.') process.exit(12)
+ if(param.charAt(len-1) !== 'c' && 
+   param.charAt(len-1) !== 'C') process.exit(13)
+
+ const util = require('util')
+ const exec = util.promisify(require('child_process').exec)
+
+ const tar = param.slice(0, len-2)
+ 
+ var exec_fn = async () => {
+     var errCode = 2
+     try {
+        await exec(`gcc -Wall -I/usr/local/include -c ${tar}.c`)
+        errCode = 3
+        await exec(`gcc ${tar}.o -lgsl -lgslcblas -lm`)
+        errCode = 41
+        await exec(`rm ${tar}.o`)
+	errCode = 42
+        await exec(`mv a.out ${tar}`)
+     } catch (error) {
+        process.exit(errCode)
+     }     
+ }
+
+ exec_fn()
+
